@@ -24,7 +24,7 @@ for platform in "${platforms[@]}"; do
     exe_extension=".exe"
   fi
 
-  go build -o dist/rzjd-$GOOS-$GOARCH$exe_extension cmd/main.go
+  go build -o dist/rzjd-$GOOS-$GOARCH$exe_extension cmd/*
 done
 
 tar -cf dist.tar.gz dist

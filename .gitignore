@@ -1,2 +1,9 @@
+# distribution
 dist/
 dist.tar.gz
+
+# temp
+tmp/
+
+# development store
+store/

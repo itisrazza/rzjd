@@ -16,12 +16,23 @@
 
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/itisrazza/rzjd/jdex"
+)
 
 type EditCmd struct {
+	ID string `arg:"" help:"ID of the entry to edit"`
 }
 
 func (cmd *EditCmd) Run() error {
-	fmt.Println("not implemented")
+	id, err := jdex.ParseACID(cmd.ID)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("opening editor to %#v\n", id)
+
 	return nil
 }
