@@ -16,24 +16,18 @@
 
 package main
 
-import (
-	"github.com/alecthomas/kong"
-)
+import "fmt"
 
-var cli struct {
-	Store          *string `short:"C" type:"path" default:"$RZJD_STORE" help:"Path to store."`
-	NonInteractive bool    `default:"false" help:"Fail instead of interactively solving issues."`
+type SetupCmd struct {
+	Shell struct {
+		Interpreter string `arg:""`
+	} `cmd:"" help:"Output shell initialisation script."`
 
-	New     NewCmd     `cmd:"" help:"Create a new store."`
-	Explore ExploreCmd `cmd:"" help:"Explore your store interactively."`
-	View    ViewCmd    `cmd:"" help:"View an entry in the store."`
-	Edit    EditCmd    `cmd:"" help:"Edit an entry in the store."`
-	Archive ArchiveCmd `cmd:"" help:"Archive an entry."`
-	Setup   SetupCmd   `cmd:"" help:"Set up rzjd in your environment."`
+	Config struct {
+	} `cmd:"" help:"Configure rzjd."`
 }
 
-func main() {
-	ctx := kong.Parse(&cli)
-	err := ctx.Run()
-	ctx.FatalIfErrorf(err)
+func (cmd *SetupCmd) Run() error {
+	fmt.Println("not implemented")
+	return nil
 }

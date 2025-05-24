@@ -14,29 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package jdex
+package main
 
-// Implements reading and writing to the index with the following format:
-//   https://github.com/johnnydecimal/index-spec
+import "fmt"
 
-type Jdex struct {
-	Areas map[string]Area
+type NewCmd struct {
 }
 
-type Area struct {
-	ID         string
-	Name       string
-	Categories map[string]Category
-}
-
-type Category struct {
-	ID      string
-	Name    string
-	Entries map[string]Entry
-}
-
-type Entry struct {
-	ID       string
-	Name     string
-	Metadata map[string]string
+func (cmd *NewCmd) Run() error {
+	fmt.Println("not implemented")
+	return nil
 }

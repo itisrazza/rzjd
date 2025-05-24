@@ -14,4 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package jdex
+package main
+
+import "fmt"
+
+type ViewCmd struct {
+}
+
+func (cmd *ViewCmd) Run() error {
+	fmt.Println("not implemented")
+	return nil
+}
