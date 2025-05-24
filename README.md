@@ -2,11 +2,17 @@
 <h1 align="center">rzjd</h1>
 <p align="center">Razza's <a href="https://johnnydecimal.com/">Johnny.Decimal</a> Management System</p>
 
+<p align="center">
+    <a href="#download"><img src="https://img.shields.io/github/downloads/itisrazza/rzjd/total" alt="Downloads"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/github/license/itisrazza/rzjd" alt="Licence"></a>
+    <a href="https://github.com/itisrazza/rzjd/actions/workflows/nightlies.yml"><img src="https://img.shields.io/github/actions/workflow/status/itisrazza/rzjd/nightlies.yml?label=nightly" alt="Nightly Builds"></a>
+    <a href="https://github.com/itisrazza/rzjd/actions/workflows/build-test.yml"><img src="https://img.shields.io/github/actions/workflow/status/itisrazza/rzjd/build-test.yml?label=tests" alt="Tests Passing"></a>
+</p>
+
 `rzjd` is a command-line utility for managing your notes and files organised with the [Johnny.Decimal] system.
 
 (TODO: add asciinema demo of how it works)
 
-(TODO: add shields with the language, build status, licence etc)
 
 [Johnny.Decimal]: https://johnnydecimal.com/
 
