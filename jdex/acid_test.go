@@ -136,9 +136,9 @@ func TestParseACID_TooFewDots(t *testing.T) {
 }
 
 func TestParseACID_BadAreaChar(t *testing.T) {
-	testParseACIDFailure(t, "Ă1.23", jdex.ErrParseACIDInvalidChars)
+	testParseACIDFailure(t, "Ă1.23", jdex.ErrACIDInvalidChars)
 }
 
 func TestParseACID_BadChar(t *testing.T) {
-	testParseACIDFailure(t, "1Ă.23", jdex.ErrParseACIDInvalidChars)
+	testParseACIDFailure(t, "1Ă.23", jdex.ErrACIDInvalidChars)
 }

@@ -24,6 +24,8 @@ import (
 
 type EditCmd struct {
 	ID string `arg:"" help:"ID of the entry to edit"`
+
+	Editor *string `short:"e" type:"path" default:"$EDITOR" help:"Path to text editor."`
 }
 
 func (cmd *EditCmd) Run() error {

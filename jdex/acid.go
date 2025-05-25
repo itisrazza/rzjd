@@ -39,20 +39,29 @@ type ACID struct {
 }
 
 var ErrParseACIDBadSeparatorCount = errors.New("ID is expected to have 2 or 3 dot separators")
-var ErrParseACIDInvalidChars = errors.New("ID contains invalid characters")
+var ErrACIDInvalidChars = errors.New("ID contains invalid characters")
+var ErrACIDRemote = errors.New("ID contains a remote when a local one is needed")
 
-func (acid *ACID) String() (str string) {
-	str = fmt.Sprintf("%c%s.%s", acid.Area, acid.Category, acid.Entry)
+func (id *ACID) String() (str string) {
+	str = fmt.Sprintf("%c%s.%s", id.Area, id.Category, id.Entry)
 
-	if acid.System != "" {
-		str = acid.System + "." + str
+	if id.System != "" {
+		str = id.System + "." + str
 	}
 
-	if acid.Sub != "" {
-		str = str + "+" + acid.Sub
+	if id.Sub != "" {
+		str = str + "+" + id.Sub
 	}
 
 	return
+}
+
+func (id *ACID) AreaString() (str string) {
+	return fmt.Sprintf("%c0-%c9", id.Area, id.Area)
+}
+
+func (id *ACID) CategoryString() (str string) {
+	return fmt.Sprintf("%c%s", id.Area, id.Category)
 }
 
 func ParseACID(input string) (acid ACID, err error) {
@@ -84,14 +93,38 @@ func ParseACID(input string) (acid ACID, err error) {
 		acid.Sub = id[plusIndex+1:]
 	}
 
-	if !strings.ContainsRune(ACIDCharset, rune(acid.Area)) {
-		err = ErrParseACIDInvalidChars
+	err = acid.Valid()
+	return
+}
+
+func MustParseACID(input string) (id ACID) {
+	id, err := ParseACID(input)
+	if err != nil {
+		panic(err)
+	}
+
+	return
+}
+
+func (id *ACID) Valid() (err error) {
+	if !strings.ContainsRune(ACIDCharset, rune(id.Area)) {
+		err = ErrACIDInvalidChars
 	}
 
 	if err == nil {
-		err = checkACIDCharset(acid.System, acid.Category, acid.Entry, acid.Sub)
+		err = checkACIDCharset(id.System, id.Category, id.Entry, id.Sub)
 	}
 
+	return
+}
+
+func (id *ACID) ValidLocal() (err error) {
+	if id.System != "" {
+		err = ErrACIDRemote
+		return
+	}
+
+	err = id.Valid()
 	return
 }
 
@@ -99,7 +132,7 @@ func checkACIDCharset(v ...string) error {
 	for _, s := range v {
 		for _, c := range s {
 			if !strings.ContainsRune(ACIDCharset, c) {
-				return ErrParseACIDInvalidChars
+				return ErrACIDInvalidChars
 			}
 		}
 	}
