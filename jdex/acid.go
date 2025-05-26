@@ -56,10 +56,12 @@ func (id *ACID) String() (str string) {
 	return
 }
 
+// Returns the area string in the form of `A0-A9`.
 func (id *ACID) AreaString() (str string) {
 	return fmt.Sprintf("%c0-%c9", id.Area, id.Area)
 }
 
+// Returns the category string in the form of `AC`.
 func (id *ACID) CategoryString() (str string) {
 	return fmt.Sprintf("%c%s", id.Area, id.Category)
 }

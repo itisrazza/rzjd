@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/itisrazza/rzjd/jdex"
+	"github.com/itisrazza/rzjd/jdex/jdexfile"
 )
 
 /*
@@ -35,6 +36,8 @@ type Store struct {
 
 var ErrPathNotDir = errors.New("path is not a directory")
 var ErrEntryNotFound = errors.New("entry was not found in index")
+
+const EntryIndexFilename = "Index.txt"
 
 func newStoreImpl(path string) (store *Store, err error) {
 	pathInfo, err := os.Stat(path)
@@ -61,33 +64,80 @@ func NewStore(path string) (store *Store, err error) {
 		return
 	}
 
-	panic("not implemented")
+	indexPath, err := store.IndexPath()
+	if err != nil {
+		err = fmt.Errorf("failed to create index file: %w", err)
+		return
+	}
+
+	indexFile, err := CreateWithParents(indexPath)
+	if err != nil {
+		err = fmt.Errorf("failed to create index file: %w", err)
+		return
+	}
+	defer indexFile.Close()
+
+	err = jdexfile.Write(&store.Index, indexFile)
+	if err != nil {
+		err = fmt.Errorf("failed to create index file: %w", err)
+		return
+	}
+
+	return
 }
 
 // Open the store at the given path.
 func OpenStore(path string) (store *Store, err error) {
-	panic("not implemented")
+	store, err = newStoreImpl(path)
+	if err != nil {
+		return
+	}
 
-	// TODO: load empty index with only the index reference
-	// TODO: get path to "00.00"
-	// TODO: load file into the index
-	// TODO: ???
-	// TODO: profit
+	indexPath, err := store.IndexPath()
+	if err != nil {
+		return
+	}
+
+	indexFile, err := os.Open(indexPath)
+	if err != nil {
+		return
+	}
+	defer indexFile.Close()
+
+	store.Index, err = jdexfile.Read(indexFile)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
-func (store *Store) AreaPath(id jdex.ACID) (path_ string, err error) {
-	panic("not implemented")
+// Get the path to the system index file.
+func (store *Store) IndexPath() (entryPath string, err error) {
+	return store.EntryIndexPath(jdex.MustParseACID("00.00"))
 }
 
-func (store *Store) CategoryPath(id jdex.ACID) (path_ string, err error) {
-	categoryName, err := store.Index.CategoryName(id)
+// Get the path to the area directory.
+func (store *Store) AreaPath(id jdex.ACID) (areaPath string, err error) {
+	areaName, err := store.Index.AreaName(id)
 	if err != nil {
 		err = errors.Join(ErrEntryNotFound, err)
 		return
 	}
 
+	return path.Join(store.Root, fmt.Sprintf("%s %s", id.AreaString(), areaName)), nil
+}
+
+// Get the path to the category directory.
+func (store *Store) CategoryPath(id jdex.ACID) (path_ string, err error) {
 	areaPath, err := store.AreaPath(id)
 	if err != nil {
+		return
+	}
+
+	categoryName, err := store.Index.CategoryName(id)
+	if err != nil {
+		err = errors.Join(ErrEntryNotFound, err)
 		return
 	}
 
@@ -101,26 +151,30 @@ func (store *Store) CategoryPath(id jdex.ACID) (path_ string, err error) {
 	return
 }
 
-func (store *Store) EntryPath(id jdex.ACID) (path_ string, err error) {
+// Get the path to the entry directory.
+func (store *Store) EntryPath(id jdex.ACID) (entryPath string, err error) {
+	categoryPath, err := store.CategoryPath(id)
+	if err != nil {
+		return
+	}
+
 	entry, err := store.Index.Entry(id)
 	if err != nil {
 		err = errors.Join(ErrEntryNotFound, err)
 		return
 	}
 
-	categoryPath, err := store.CategoryPath(id)
+	entryPath = path.Join(categoryPath, EntryFilename(entry))
+	return
+}
+
+func (store *Store) EntryIndexPath(id jdex.ACID) (entryIndexPath string, err error) {
+	entryPath, err := store.EntryPath(id)
 	if err != nil {
 		return
 	}
 
-	path_ = path.Join(categoryPath, EntryFilename(entry))
-
-	pathInfo, err := os.Stat(path_)
-	if err != nil || !pathInfo.IsDir() {
-		err = errors.Join(ErrPathNotDir, err)
-		return
-	}
-
+	entryIndexPath = path.Join(entryPath, EntryIndexFilename)
 	return
 }
 

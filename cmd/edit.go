@@ -18,14 +18,20 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path"
+	"runtime"
 
 	"github.com/itisrazza/rzjd/jdex"
+	"github.com/itisrazza/rzjd/jdfs"
 )
 
 type EditCmd struct {
-	ID string `arg:"" help:"ID of the entry to edit"`
+	ID   string  `arg:"" help:"ID of the entry to edit"`
+	Name *string `arg:"" optional:"" help:"Providing a name will rename the entry."`
 
-	Editor *string `short:"e" type:"path" default:"$EDITOR" help:"Path to text editor."`
+	Editor *string `short:"e" type:"path" help:"Path to text editor."`
 }
 
 func (cmd *EditCmd) Run() error {
@@ -34,7 +40,65 @@ func (cmd *EditCmd) Run() error {
 		return err
 	}
 
-	fmt.Printf("opening editor to %#v\n", id)
+	// if jdex.IsProtectedACID(id) {
+	// 	return fmt.Errorf("%q is a protected ID", id.String())
+	// }
+
+	store, err := OpenOrCreateStore()
+	if err != nil {
+		return err
+	}
+
+	entryPath, err := store.EntryPath(id)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(entryPath, 0755)
+	if err != nil {
+		return err
+	}
+
+	return cmd.openEditor(path.Join(entryPath, jdfs.EntryIndexFilename))
+}
+
+func (cmd *EditCmd) openEditor(path string) error {
+	editorName, err := cmd.editorName()
+	if err != nil {
+		return fmt.Errorf("couldn't find a suitable text editor: %w", err)
+	}
+
+	editorCmd := exec.Command(editorName, path)
+	editorCmd.Stdin = os.Stdin
+	editorCmd.Stdout = os.Stdout
+	editorCmd.Stderr = os.Stderr
+
+	err = editorCmd.Run()
+	if err != nil {
+		return fmt.Errorf("editor failed to run: %w", err)
+	}
 
 	return nil
+}
+
+func (cmd *EditCmd) editorName() (string, error) {
+	if cmd.Editor != nil {
+		return *cmd.Editor, nil
+	}
+
+	editorName, ok := os.LookupEnv("RZJD_EDITOR")
+	if ok {
+		return editorName, nil
+	}
+
+	editorName, ok = os.LookupEnv("EDITOR")
+	if ok {
+		return editorName, nil
+	}
+
+	if runtime.GOOS == "windows" {
+		return "notepad.exe", nil
+	}
+
+	return exec.LookPath("nano")
 }

@@ -17,11 +17,15 @@
 package main
 
 import (
+	"errors"
+	"os"
+
 	"github.com/alecthomas/kong"
+	"github.com/itisrazza/rzjd/rzinteractive"
 )
 
 var cli struct {
-	Store          *string `short:"s" type:"path" default:"$RZJD_STORE" help:"Path to where your system is stored."`
+	Store          *string `short:"s" type:"path" help:"Path to where your system is stored."`
 	NonInteractive bool    `default:"false" help:"Fail instead of interactively solving issues."`
 
 	New     NewCmd     `cmd:"" help:"Create a new store."`
@@ -35,5 +39,10 @@ var cli struct {
 func main() {
 	ctx := kong.Parse(&cli)
 	err := ctx.Run()
+
+	if errors.Is(err, rzinteractive.ErrCancel) {
+		os.Exit(1)
+	}
+
 	ctx.FatalIfErrorf(err)
 }

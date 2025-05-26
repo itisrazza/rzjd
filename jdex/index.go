@@ -18,6 +18,7 @@ package jdex
 
 import (
 	"errors"
+	"maps"
 	"slices"
 )
 
@@ -60,6 +61,8 @@ var ErrEntryNotFound = errors.New("entry does not exist")
 var ErrCategoryNotFound = errors.New("category does not exist")
 var ErrAreaNotFound = errors.New("area does not exist")
 
+var ErrUnknownFormat = errors.New("unknown format")
+
 // Creates a new index
 func NewIndex() (Index, error) {
 	index := Index{
@@ -71,7 +74,7 @@ func NewIndex() (Index, error) {
 
 	index.PutArea(indexID, "System")
 	index.PutCategory(indexID, "Index")
-	index.putEntryUnsafe(Entry{
+	index.PutEntry(Entry{
 		ID:   indexID,
 		Name: "System Index",
 		Metadata: map[string]string{
@@ -92,6 +95,48 @@ func (index *Index) Entry(id ACID) (entry Entry, err error) {
 	if !ok {
 		err = ErrEntryNotFound
 		return
+	}
+
+	return
+}
+
+func (index *Index) AreaIndexes() (ids []ACID) {
+	ids = make([]ACID, len(index.areas))
+	for n, k := range slices.Sorted(maps.Keys(index.areas)) {
+		ids[n] = ACID{Area: k}
+	}
+
+	return
+}
+
+func (index *Index) Categories(id ACID) (ids []ACID, ok bool) {
+	area, ok := index.areas[id.Area]
+	if !ok {
+		return
+	}
+
+	ids = make([]ACID, len(area.categories))
+	for n, k := range slices.Sorted(maps.Keys(area.categories)) {
+		ids[n] = ACID{Area: id.Area, Category: k}
+	}
+
+	return
+}
+
+func (index *Index) Entries(id ACID) (ids []ACID, ok bool) {
+	area, ok := index.areas[id.Area]
+	if !ok {
+		return
+	}
+
+	category, ok := area.categories[id.Category]
+	if !ok {
+		return
+	}
+
+	ids = make([]ACID, len(category.entries))
+	for n, k := range slices.Sorted(maps.Keys(category.entries)) {
+		ids[n] = index.entries[k].ID
 	}
 
 	return
@@ -176,7 +221,7 @@ func (index *Index) PutCategory(id ACID, name string) error {
 	return nil
 }
 
-func (index *Index) putEntryUnsafe(entry Entry) (err error) {
+func (index *Index) PutEntry(entry Entry) (err error) {
 	id := entry.ID
 
 	if err = id.ValidLocal(); err != nil {
@@ -199,14 +244,6 @@ func (index *Index) putEntryUnsafe(entry Entry) (err error) {
 	index.entries[id.String()] = entry
 
 	return
-}
-
-func (index *Index) PutEntry(entry Entry) error {
-	if IsProtectedACID(entry.ID) {
-		return ErrProtectedID
-	}
-
-	return index.putEntryUnsafe(entry)
 }
 
 func IsProtectedACID(id ACID) bool {
